@@ -1,20 +1,18 @@
 package com.mehdi.Enterprise_Lektion_56_Spring_Security_Intro.config;
 
-
 import com.mehdi.Enterprise_Lektion_56_Spring_Security_Intro.authority.UserPermission;
 import com.mehdi.Enterprise_Lektion_56_Spring_Security_Intro.authority.UserRole;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
-
 import static org.springframework.security.config.Customizer.withDefaults;
 
 @Configuration
@@ -28,19 +26,20 @@ public class AppSecurityConfig {
     // TODO - Question - FormLogin.html, where is /login?
     // TODO - Question - Do you want this class in .gitignore?
     // TODO - Question #2 - What does anyRequest & Authenticated, do that isn't done by default?
+    // TODO - Question #8 - Bean alternative to Autowired
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
         http
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/", "/login", "/api/**").permitAll()
+                        .requestMatchers("/", "/login").permitAll()
                         .requestMatchers(HttpMethod.GET,"/api/**").permitAll()
+                        .requestMatchers(HttpMethod.DELETE,"/api/**").hasAuthority(UserPermission.DELETE.getPermission())
                         // .requestMatchers("/admin").hasRole(UserRole.ADMIN.name())
                         .requestMatchers("/user").hasRole(UserRole.USER.name())
                         .requestMatchers("/admin").hasAuthority(UserPermission.DELETE.getPermission()) // TODO ROLE_ not necessary here?
-                        .anyRequest()
-                        .authenticated()
+                        .anyRequest().authenticated()
                 )
 
                 .formLogin(withDefaults());
@@ -48,17 +47,22 @@ public class AppSecurityConfig {
         return http.build();
     }
 
-    // DEBUG USER -
-    @Bean
-    public UserDetailsService userDetailsService() {
-        UserDetails user = User
-                .withDefaultPasswordEncoder()
+
+    // DEBUG USER
+   /* @Bean
+    public UserDetailsService userDetailsService(PasswordEncoder passwordEncoder) {
+        UserDetails user = User.builder()
+                .passwordEncoder(passwordEncoder::encode) // TODO THE CHANGE
                 .username("benny")
-                .password("123")
+                .password("123") // TODO THE CHANGE
                 .authorities(UserRole.USER.getAuthorities()) // ROLE + Permissions
                 .build();
 
+        System.out.println("PASSWORD FOR DEBUG USER " + user.getPassword());
+
         return new InMemoryUserDetailsManager(user);
     }
+
+*/
 
 }
